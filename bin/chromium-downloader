@@ -38,7 +38,7 @@ echo "Downloading Chromium"
 # download chromium
 rm -f ${CONTROL_FILE} ${DATA_FILE}
 (
-  wget https://launchpad.net/~saiarcot895/+archive/ubuntu/chromium-dev/+files/chromium-browser_88.0.4324.11-0ubuntu1~ppa2~20.10.1_amd64.deb 2>${DATA_FILE}
+  wget https://launchpad.net/~saiarcot895/+archive/ubuntu/chromium-dev/+files/chromium-browser_88.0.4324.11-0ubuntu1~ppa1~18.04.1_amd64.deb 2>${DATA_FILE}
   touch ${CONTROL_FILE}
 ) | \
   while [ : ]; do
@@ -54,7 +54,7 @@ rm -f ${CONTROL_FILE} ${DATA_FILE}
 # extrat Chromium.deb
 kodi-send --action="Notification(Extracting Chromium,starting,1000,${ICON})" >/dev/null
 echo "Extract Chromium"
-ar -x chromium-browser_88.0.4324.11-0ubuntu1~ppa2~20.10.1_amd64.deb
+ar -x chromium-browser_88.0.4324.11-0ubuntu1~ppa1~18.04.1_amd64.deb
 
 # extract data.tar.xz to Chromium-bin directory
 mkdir $ADDON_DIR/chromium-bin
