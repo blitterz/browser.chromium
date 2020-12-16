@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0
+# Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
+
+. /etc/profile
+oe_setup_addon browser.chromium
+
+ICON=$ADDON_DIR/resources/icon.png
+CONTROL_FILE=/tmp/curl.done
+DATA_FILE=/tmp/curl.data
+
+# check for enough free disk space
+if [ $(df . | awk 'END {print $4}') -lt 400000 ]; then
+  kodi-send --action="Notification(Not enough disk space, at least 400MB are required,30000,${ICON})" >/dev/null
+  exit 0;
+fi
+
+# remove install status and folders
+if [ -f $ADDON_DIR/extract.ok ]; then
+  rm $ADDON_DIR/extract.ok
+fi
+
+if [ -d $ADDON_DIR/chromium-bin ]; then
+  rm -rf $ADDON_DIR/chromium-bin
+fi
+
+if [ -d $ADDON_DIR/tmp_download ]; then
+  rm -rf $ADDON_DIR/tmp_download
+fi
+
+# create tmp download dir
+mkdir -p $ADDON_DIR/tmp_download
+cd $ADDON_DIR/tmp_download
+
+echo "Downloading Chromium"
+
+# download chromium
+rm -f ${CONTROL_FILE} ${DATA_FILE}
+(
+  wget https://launchpad.net/~saiarcot895/+archive/ubuntu/chromium-dev/+files/chromium-browser_88.0.4324.11-0ubuntu1~ppa2~20.10.1_amd64.deb 2>${DATA_FILE}
+  touch ${CONTROL_FILE}
+) | \
+  while [ : ]; do
+    [ -f ${DATA_FILE} ] && prog="$(tr '\r' '\n' < ${DATA_FILE} | tail -n 1 | sed -r 's/^[# ]+/#/;s/^[^0-9]*//g')" || prog=
+    kodi-send --action="Notification(Downloading Chromium,"${prog:-0.0%}",3000,${ICON})" >/dev/null
+    [ -f ${CONTROL_FILE} ] && break
+    sleep 4
+  done
+
+rm -f ${CONTROL_FILE} ${DATA_FILE}
+
+## extract chromium
+# extrat Chromium.deb
+kodi-send --action="Notification(Extracting Chromium,starting,1000,${ICON})" >/dev/null
+echo "Extract Chromium"
+ar -x chromium-browser_88.0.4324.11-0ubuntu1~ppa2~20.10.1_amd64.deb
+
+# extract data.tar.xz to Chromium-bin directory
+mkdir $ADDON_DIR/Chromium-bin
+tar xf data.tar.xz --strip-components=4 -C $ADDON_DIR/chromium-bin
+
+# cleanup
+rm -rf $ADDON_DIR/tmp_download
+touch $ADDON_DIR/extract.ok
+kodi-send --action="Notification(Extracting Chromium,finished,1000,${ICON})" >/dev/null
